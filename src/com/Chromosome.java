@@ -1,19 +1,25 @@
 package com;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 public class Chromosome {
 
-    private int cells; //num of test cases.. 0 or 1
-    private ArrayList<String> individual ;
+    private int cells; //num items per tc.. 0 or 1
+    private int chromoWeight;
+    private float fitness;
+
+    private ArrayList<String> contents ;
 
     /*constructor*/
     public Chromosome(int cells)
     {
         this.cells = cells;
-        individual = new ArrayList<>(cells);
+        contents = new ArrayList<>(cells);
+        chromoWeight = 0;
+        fitness = 0;
     }
+
+
 
     /*given a probability , set the contents of the chromosome.. 1 or 0*/
     public void initialize(float probability)
@@ -22,11 +28,44 @@ public class Chromosome {
         {
             float odds =(float) (Math.random());
 
-            //check id its greater than or equal given probability
+            //check if its greater than or equal given probability
             if (odds >= probability)
-                individual.add("1");
+                contents.add("1");
+            else
+                contents.add("0");
         }
 
     }
 
+
+    public float evaluate_fitness(TestCase testCase)
+    {
+        for (int i = 0 ; i < cells ; i++){
+            if (contents.get(i).equals("1"))
+                fitness += testCase.getValuePerWeight(i);
+        }
+        return fitness;
+
+    }
+
+    public int check_weight(TestCase testCase)
+    {
+        for (int i = 0 ; i < cells ; i++){
+            if (contents.get(i).equals("1"))
+                chromoWeight += testCase.getItems().get(i).getKey();
+        }
+        return chromoWeight;
+    }
+
+    public void setContents(ArrayList<String> contents) {
+        this.contents = contents;
+    }
+
+    public ArrayList<String> getContents() {
+        return contents;
+    }
+
+    public int getCells() {
+        return cells;
+    }
 }
