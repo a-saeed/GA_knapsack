@@ -1,34 +1,40 @@
 package com;
 
+import javafx.util.Pair;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.util.ArrayList;
 
 public class Knapsack {
 
-    private final static int test_cases = 20;
-
     /*GLOBAL*/
     private final static int population_size = 4;
+    private final static int test_cases = 20;
+    //reading from file
+    private static String input = "";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
 
+        ArrayList<TestCase> allTestCases = fillAllTestCases();
 
         /*for each iteration , read a test case from the file*/
         for (int i = 0 ; i < test_cases ; i++ )
         {
             /*VARIABLES*/
-            int iterations = 10; //max num of iterations
+            int iterations = 50; //max num of iterations
 
             /*COLLECTIONS*/
             ArrayList<Chromosome> individuals = new ArrayList<>(population_size); //holding all generations.
 
             /*initialise the population*/
-            TestCase testCase = null;
-            initializePopulation(individuals , testCase.getSize() );
+            TestCase testCase = allTestCases.get(i);
+
+            initializePopulation(individuals , testCase.getSize());
 
             while (iterations != 0)
             {
-                checkOptimal();
-
                 crossover(individuals , selection(individuals , testCase) );
 
                 mutation(individuals , (float) 0.1 );
@@ -37,15 +43,13 @@ public class Knapsack {
 
                 iterations --;
             }
+            System.out.println("case"+ "("+(i+1)+"): "  + bestSolution(individuals , testCase));
         }
-    }
-
-    private static void checkOptimal() {
     }
 
     private static void initializePopulation(ArrayList<Chromosome> individuals , int cells) {
 
-        for (int i = 0 ; i < individuals.size() ; i++){
+        for (int i = 0 ; i < population_size ; i++){
             Chromosome member = new Chromosome(cells);
             member.initialize((float) 0.50);
             individuals.add(member);
@@ -58,9 +62,8 @@ public class Knapsack {
         ArrayList<Integer> returned = new ArrayList<>(2);
         ArrayList<Float> cumulativeFitness = new ArrayList<>(testCase.getSize()); //build the roulette wheel
 
-        int index1 = 0;
-        int index2 = 0;
-
+        int index1;
+        int index2;
 
         //evaluate fitness for each chromosome then add it to cumulative
         for (int i = 0 ; i < population_size ; i++)
@@ -77,15 +80,19 @@ public class Knapsack {
         do {
             float one = (float) (Math.random());
             float two = (float) (Math.random());
+
+             index1 = 11111;
+             index2 = 11111;
+
             one *= cumulativeFitness.get(population_size - 1);
             two *= cumulativeFitness.get(population_size - 1);
 
             for (int i = 0; i < population_size; i++) {
 
-                if (one <= cumulativeFitness.get(i))
+                if ((one <= cumulativeFitness.get(i)) && (index1 == 11111))
                     index1 = i;
 
-                if (two <= cumulativeFitness.get(i))
+                if ((two <= cumulativeFitness.get(i)) && (index2 == 11111))
                     index2 = i;
             }
         }while (index1 == index2);
@@ -144,6 +151,7 @@ public class Knapsack {
 
         individuals.add(offspring1);
         individuals.add(offspring2);
+
     }
 
     private static void mutation(ArrayList<Chromosome> individuals , float prob) {
@@ -152,6 +160,7 @@ public class Knapsack {
 
         for (int i = 0 ; i < 2 ; i++)
         {
+            // last two chromosomes added by crossOver
             Chromosome chromosome = individuals.get(individuals.size() - 2 + i);
 
             for (int j = 0 ; j < cells ; j++)
@@ -166,15 +175,12 @@ public class Knapsack {
                         chromosome.getContents().set(j , "1");
                 }
             }
-
-            individuals.add(chromosome);
+            individuals.remove(individuals.size() - 2 + i);
+            individuals.add(individuals.size() - 1 + i , chromosome);
         }
     }
 
-
     private static void replacement(ArrayList<Chromosome> individuals , TestCase testCase) {
-
-        while (individuals.size() != population_size) {
 
             for (int i = 0; i < individuals.size(); i++) {
 
@@ -183,28 +189,105 @@ public class Knapsack {
 
                 //remove a chromosome exceeding the max weight.
                 if (chromosomeWeight > testCase.getMaxWeight())
-                    individuals.remove(i);
+                    individuals.remove(chromosome);
+
+                //break when original pop size reached
+                if (individuals.size() == population_size)
+                    break;
             }
 
             //remove chromosome with least fitness.
-            if (individuals.size() != population_size)
+            while (individuals.size() != population_size)
+            {
                 individuals.remove(getLeastFit(individuals , testCase));
-        }
+            }
     }
 
     private static int getLeastFit(ArrayList<Chromosome> individuals , TestCase testCase)
     {
-        float min = 1000000;
+        float minFitness = 1000000;
         int index = 0;
 
         for (int i = 0 ; i < individuals.size() ; i++)
         {
-            if (min > individuals.get(i).evaluate_fitness(testCase)) {
+            float currentFitness = individuals.get(i).evaluate_fitness(testCase);
 
-                min = individuals.get(i).evaluate_fitness(testCase);
+            if (minFitness > currentFitness) {
+
+                minFitness = currentFitness;
                 index = i;
             }
         }
         return index;
+    }
+
+    private static float bestSolution(ArrayList<Chromosome> individuals , TestCase testCase)
+    {
+        float maxValue = 0;
+
+        for (int i = 0 ; i < individuals.size() ; i++)
+        {
+            float currentValue = individuals.get(i).chromosomeValue(testCase);
+
+            if (maxValue < currentValue)
+            {
+                maxValue = currentValue;
+            }
+        }
+        return maxValue;
+    }
+
+    private static String getAllFile() throws Exception
+    {
+        File file = new File("input_example.txt");
+        BufferedReader READ = new BufferedReader(new FileReader(file));
+        int q=READ.read();
+        String data = "";
+        while(q != -1)
+        {
+            data +=( char)q;
+            q=READ.read();
+        }
+        return data;
+    }
+    private static ArrayList<TestCase> fillAllTestCases() throws Exception
+    {
+        input = getAllFile();
+        ArrayList<TestCase> testCases = new ArrayList<>();
+        String [] allSeparated = input.split("/");
+
+        System.out.println("length " + allSeparated.length);
+
+
+        for (int i=0;i<allSeparated.length;i++)
+        {
+            String [] divided = allSeparated[i].split(System.lineSeparator());
+            int maxW=0;
+            int size;
+            ArrayList<Pair<Float , Float>> items = new ArrayList<>();
+//            System.out.println("divided length");
+//            System.out.println(divided.length);
+            for (int j=0;j<divided.length ;j++)
+            {
+                if(j==0)
+                    maxW = Integer.valueOf(divided[0]);
+                else
+                {
+                    String [] row = divided[j].split(" ");
+                    float weight = Float.valueOf(row[0]);
+                    float value = Float.valueOf(row[1]);
+//                    System.out.print("weight ");
+//                    System.out.print(weight);
+//                    System.out.print("  value ");
+//                    System.out.println(value);
+                    Pair<Float,Float> p = new Pair<>(weight , value);
+                    items.add(p);
+                }
+            }
+            size = items.size();
+            TestCase testCase = new TestCase(size,maxW,items);
+            testCases.add(testCase);
+        }
+        return testCases;
     }
 }

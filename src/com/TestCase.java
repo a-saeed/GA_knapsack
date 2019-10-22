@@ -1,19 +1,19 @@
 package com;
 
 import javafx.util.Pair;
+import sun.plugin2.os.windows.FLASHWINFO;
 
 import java.util.ArrayList;
 
 public class TestCase {
     private int size;
     private int maxWeight;
-    private ArrayList<Pair<Integer , Integer>> items;
+    private ArrayList<Pair<Float, Float>> items;
 
-    public TestCase(int s , int max , ArrayList<Pair<Integer , Integer>> itemss)
-    {
+    public TestCase(int s, int max, ArrayList<Pair<Float, Float>> itemss) {
         size = s;
         maxWeight = max;
-        ArrayList<Pair<Integer , Integer>> items = new ArrayList<>(size);
+        items = new ArrayList<>(size);
         items = itemss;
     }
 
@@ -21,28 +21,23 @@ public class TestCase {
         return size;
     }
 
-    public void setSize(int size) {
-        this.size = size;
-    }
-
     public int getMaxWeight() {
         return maxWeight;
     }
 
-    public void setMaxWeight(int maxWeight) {
-        this.maxWeight = maxWeight;
+    public float getValuePerWeight(int index) {
+        float key = items.get(index).getKey();
+        float value = items.get(index).getValue();
+
+        return value / key;
     }
 
-    public ArrayList<Pair<Integer, Integer>> getItems() {
-        return items;
-    }
-
-    public void setItems(ArrayList<Pair<Integer, Integer>> items) {
-        this.items = items;
-    }
-
-    public float getValuePerWeight(int index)
+    public float getPairVlaue(int index)
     {
-        return (float)items.get(index).getValue() / (float) items.get(index).getKey();
+        return items.get(index).getValue();
+    }
+
+    public ArrayList<Pair<Float, Float>> getItems() {
+        return items;
     }
 }

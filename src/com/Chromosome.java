@@ -48,6 +48,17 @@ public class Chromosome {
 
     }
 
+    public float chromosomeValue(TestCase testCase)
+    {
+        float value = 0 ;
+
+        for (int i = 0 ; i < cells ; i++){
+            if (contents.get(i).equals("1"))
+                value += testCase.getPairVlaue(i);
+        }
+        return value;
+    }
+
     public int check_weight(TestCase testCase)
     {
         for (int i = 0 ; i < cells ; i++){
